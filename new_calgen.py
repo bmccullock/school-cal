@@ -42,6 +42,7 @@ class SchoolYear:
                 day_set.append(d)
         return day_set
 
+
 class SchoolDay(object):
     '''A single school day'''
 
@@ -60,7 +61,6 @@ class SchoolDay(object):
             return True
         else:
             return False
-
 
 
 def build_calendar(calendar, MONTHS, HOLIDAYS):
