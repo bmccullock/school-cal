@@ -1,6 +1,7 @@
 from calendar import Calendar, day_name, month_name
 import itertools
 
+# Must be a way to do this better
 MONTHS = ((2013, 9), (2013, 10), (2013, 11), (2013, 12), (2014, 1), (2014, 2), (2014, 3), 
     (2014, 4), (2014, 5), (2014, 6))
 
@@ -29,6 +30,7 @@ class SchoolYear:
         return '<SchoolYear containing %d SchoolDay objects>' % len(self.days)
 
     def get_month(self, year, month):
+        # return list of all SchoolDay objects in the given month
         day_set = []
         for d in self.days:
             if d.month == month:
@@ -36,6 +38,7 @@ class SchoolYear:
         return day_set
 
     def get_rotation_days(self, rotation_number):
+        # return list of all SchoolDay objects matching rotation_number
         day_set = []
         for d in self.days:
             if d.rotation == rotation_number:
@@ -57,38 +60,40 @@ class SchoolDay(object):
         return '%s/%s/%s, %s (Day %s)' % (self.month, self.date, self.year, day_name[self.day], self.rotation)
 
     def is_tuesday(self):
+        # Check if the SchoolDay is a Tuesday
         if self.day == 1:
             return True
         else:
             return False
 
 
-def build_calendar(calendar, MONTHS, HOLIDAYS):
-    '''Build a list of school days and remove any holidays'''
+def build_calendar(calendar, MONTHS, HOLIDAYS, rotation_start):
+    '''Build a list of school days and remove any holidays. Return as a list with
+    each day represented as: [year, month, date, day, rotation]  
+    rotation_start = the rotation number for the first day of school     
+    '''
     school_days = []
     for m in MONTHS:
-        date_gen = calendar.itermonthdays2(m[0], m[1])
-        for d in date_gen:
-            if (d[0] > 0) and (d[1] < 5):
-                val = [m[0], m[1], d[0], d[1]] # year, month, date, day, (rotation)
+        for d in calendar.itermonthdays2(m[0], m[1]): # year, month
+            if (d[0] > 0) and (d[1] < 5): # date not null (0) and day not sat/sun 
+                val = [m[0], m[1], d[0], d[1]] # year, month, date, day
                 school_days.append(val)
-    # Check the list of holidays and remove from the list
+    # Remove any holidays
     for month in HOLIDAYS.iterkeys():
-        values = HOLIDAYS.get(month)
-        for v in values:
+        for date in HOLIDAYS.get(month):
             for d in school_days:
-                if (d[1] == month) and (d[2] == v):
-                    school_days.remove(d)   
+                if (d[1] == month) and (d[2] == date):
+                    school_days.remove(d) 
     # create a generator for the rotation schedule and append the rotation day to each day
-    # adjust the [start] parameter of islice to start from diff rotation day
-    rotation = itertools.islice( (itertools.cycle([i for i in range(1, 7)]) ), 0, None)
+    start = rotation_start - 1
+    rotation = itertools.islice( (itertools.cycle( [i for i in range(1, 7)]) ), start, None)
     for date in school_days:
         date.append(rotation.next())
     return school_days
 
 if __name__ == '__main__':
-    school_cal = SchoolYear( build_calendar(Calendar(), MONTHS, HOLIDAYS) )
-    for d in school_cal.get_month(2014, 3):
+    school_cal = SchoolYear( build_calendar(Calendar(), MONTHS, HOLIDAYS, 1) )
+    for d in school_cal.get_month(2014, 01):
         print d
 
 
